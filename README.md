@@ -126,7 +126,7 @@ Local: copy `.env.example` → `.env.local` (never commit secrets). `.gitignore`
 
 ### 5. Long streaming / plan limits
 
-The messages route exports **`maxDuration`** (default **300** seconds) so deploy works on **Vercel Hobby** (hard cap 300). To allow longer runs on **Pro+**, set **`MESSAGES_MAX_DURATION`** in the Vercel project env (e.g. `600`) — must not exceed your plan’s [function limit](https://vercel.com/docs/functions/runtimes#max-duration). Unset or use `300` on Hobby.
+`app/api/chats/[chatId]/messages/route.ts` sets `export const maxDuration = 300` (**required static literal** in Next.js — env-based values break the build). That matches **Vercel Hobby**. On **Pro+**, edit the literal (e.g. to `600`) to match your plan’s [max duration](https://vercel.com/docs/functions/runtimes#max-duration), then redeploy.
 
 ### 6. Smoke test after deploy
 

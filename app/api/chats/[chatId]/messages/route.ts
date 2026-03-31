@@ -23,11 +23,10 @@ import { formatLlmErrorForClient } from "@/server/llm-error";
 import { buildCoreMessages, streamAssistantText } from "@/server/llm-pipeline";
 
 /**
- * Serverless timeout for streaming LLM replies (seconds).
- * Default **300** matches Vercel Hobby max. On Pro+, set `MESSAGES_MAX_DURATION` in the dashboard (e.g. `600`) if your plan allows it.
+ * Serverless timeout for streaming LLM (seconds). Must be a static number — Next.js rejects computed exports here.
+ * **300** = Vercel Hobby max. On Pro+, change this literal (e.g. `600`) if your plan allows longer functions.
  */
-const n = parseInt(process.env.MESSAGES_MAX_DURATION ?? "300", 10);
-export const maxDuration = Number.isFinite(n) ? Math.max(1, Math.min(n, 900)) : 300;
+export const maxDuration = 300;
 
 const bodySchema = z.object({
   content: z.string().min(1).max(32000),
