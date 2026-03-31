@@ -22,8 +22,12 @@ import {
 import { formatLlmErrorForClient } from "@/server/llm-error";
 import { buildCoreMessages, streamAssistantText } from "@/server/llm-pipeline";
 
-/** Долгие стримы (большие ответы) на хостинге обрываются без высокого лимита. */
-export const maxDuration = 600;
+/**
+ * Serverless timeout for streaming LLM replies (seconds).
+ * Default **300** matches Vercel Hobby max. On Pro+, set `MESSAGES_MAX_DURATION` in the dashboard (e.g. `600`) if your plan allows it.
+ */
+const n = parseInt(process.env.MESSAGES_MAX_DURATION ?? "300", 10);
+export const maxDuration = Number.isFinite(n) ? Math.max(1, Math.min(n, 900)) : 300;
 
 const bodySchema = z.object({
   content: z.string().min(1).max(32000),

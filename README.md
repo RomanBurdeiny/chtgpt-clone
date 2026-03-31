@@ -126,7 +126,7 @@ Local: copy `.env.example` → `.env.local` (never commit secrets). `.gitignore`
 
 ### 5. Long streaming / plan limits
 
-The messages route sets `maxDuration = 600` (seconds). On **Vercel Pro** and above, this can apply up to the plan maximum. On **Hobby**, serverless duration is **shorter** — long LLM streams may **cut off**; use Pro (or a shorter conversation / smaller model output) for heavy demos.
+The messages route exports **`maxDuration`** (default **300** seconds) so deploy works on **Vercel Hobby** (hard cap 300). To allow longer runs on **Pro+**, set **`MESSAGES_MAX_DURATION`** in the Vercel project env (e.g. `600`) — must not exceed your plan’s [function limit](https://vercel.com/docs/functions/runtimes#max-duration). Unset or use `300` on Hobby.
 
 ### 6. Smoke test after deploy
 
