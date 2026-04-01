@@ -117,6 +117,7 @@ export function ChatApp() {
   const [pickedChatId, setPickedChatId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [pendingAtts, setPendingAtts] = useState<AttachmentMeta[]>([]);
+  const [removingAttachmentId, setRemovingAttachmentId] = useState<string | null>(null);
   const [streamText, setStreamText] = useState("");
   const [sending, setSending] = useState(false);
   /** Smoother on-screen reveal than raw NDJSON chunks */
@@ -507,6 +508,35 @@ export function ChatApp() {
     setPendingAtts((p) => [...p, j]);
   };
 
+  const removePendingAttachment = async (attachmentId: string) => {
+    const chatId = activeChatId ?? pickedChatId;
+    if (!chatId) {
+      toast.error("Cannot remove attachment", { description: "No chat selected." });
+      return;
+    }
+    setRemovingAttachmentId(attachmentId);
+    try {
+      const r = await apiFetch(`/api/chats/${chatId}/attachments/${attachmentId}`, {
+        method: "DELETE",
+        accessToken,
+      });
+      if (r.status === 204) {
+        setPendingAtts((p) => p.filter((a) => a.id !== attachmentId));
+        return;
+      }
+      let msg = `HTTP ${r.status}`;
+      try {
+        const j = (await r.json()) as { error?: { message?: string } };
+        if (j.error?.message) msg = j.error.message;
+      } catch {
+        /* ignore */
+      }
+      toast.error("Could not remove attachment", { description: msg });
+    } finally {
+      setRemovingAttachmentId(null);
+    }
+  };
+
   const onPaste = (e: React.ClipboardEvent) => {
     const files = Array.from(e.clipboardData.files ?? []);
     const img = files.find((f) => f.type.startsWith("image/"));
@@ -798,12 +828,30 @@ export function ChatApp() {
               {pendingAtts.length ? (
                 <div className="mx-auto mb-2 flex max-w-3xl flex-wrap gap-2">
                   {pendingAtts.map((a) => (
-                    <span
+                    <div
                       key={a.id}
-                      className="rounded-md border bg-muted px-2 py-1 text-muted-foreground text-xs"
+                      className="flex max-w-full items-center gap-1 rounded-md border bg-muted py-1 pl-2 pr-0.5 text-muted-foreground text-xs"
                     >
-                      {a.kind === "image" ? "Image" : "Document"} · {a.mimeType}
-                    </span>
+                      <span className="min-w-0 truncate">
+                        {a.kind === "image" ? "Image" : "Document"} · {a.mimeType}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
+                        title="Remove attachment"
+                        aria-label="Remove attachment"
+                        disabled={sending || removingAttachmentId === a.id}
+                        onClick={() => void removePendingAttachment(a.id)}
+                      >
+                        {removingAttachmentId === a.id ? (
+                          <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                        ) : (
+                          <X className="size-3.5" aria-hidden />
+                        )}
+                      </Button>
+                    </div>
                   ))}
                 </div>
               ) : null}

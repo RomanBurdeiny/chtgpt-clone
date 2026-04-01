@@ -141,6 +141,30 @@ export async function claimPendingAttachments(
   return rows;
 }
 
+/** Pending upload: row belongs to chat, message_id still null. Removes object from Storage then DB row. */
+export async function deletePendingAttachmentById(
+  admin: SupabaseClient,
+  chatId: string,
+  attachmentId: string,
+): Promise<void> {
+  const { data: row, error: selErr } = await admin
+    .from("chat_attachments")
+    .select("id, chat_id, message_id, storage_path")
+    .eq("id", attachmentId)
+    .maybeSingle();
+  if (selErr) throw selErr;
+  if (!row) throw new Error("attachment_not_found");
+  const r = row as Pick<AttachmentRow, "chat_id" | "message_id" | "storage_path">;
+  if (r.chat_id !== chatId) throw new Error("attachment_forbidden");
+  if (r.message_id != null) throw new Error("attachment_already_sent");
+
+  const { error: stErr } = await admin.storage.from("chat-uploads").remove([r.storage_path]);
+  if (stErr) throw stErr;
+
+  const { error: delErr } = await admin.from("chat_attachments").delete().eq("id", attachmentId);
+  if (delErr) throw delErr;
+}
+
 export async function insertUserMessage(
   admin: SupabaseClient,
   args: {

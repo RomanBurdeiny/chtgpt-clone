@@ -63,7 +63,17 @@ export async function POST(req: Request, ctx: { params: Promise<{ chatId: string
     upsert: false,
   });
   if (up.error) {
-    return jsonError(500, "Upload failed", "upload_failed");
+    console.error("[attachments] storage.upload failed", chatId, up.error.message, up.error);
+    return NextResponse.json(
+      {
+        error: {
+          message: "Upload failed",
+          code: "upload_failed",
+          details: up.error.message,
+        },
+      },
+      { status: 500 },
+    );
   }
 
   let extracted_text: string | null = null;

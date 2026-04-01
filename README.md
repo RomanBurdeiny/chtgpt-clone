@@ -84,6 +84,7 @@ Open [http://localhost:3000](http://localhost:3000): **Open chat** (guest), or *
 | `DELETE` | `/api/chats/:chatId` | Delete chat |
 | `POST` | `/api/chats/:chatId/messages` | Send message; response **`application/x-ndjson`** stream |
 | `POST` | `/api/chats/:chatId/attachments` | Multipart upload (`file` field) |
+| `DELETE` | `/api/chats/:chatId/attachments/:attachmentId` | Remove a pending attachment (not yet sent with a message); **204** empty body |
 
 Authenticated calls: `Authorization: Bearer <supabase_access_token>` (from the Supabase session after sign-in).
 
